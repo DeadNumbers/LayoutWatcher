@@ -1,10 +1,10 @@
 #include "FallbackX11.h"
-#include <QDebug>
+#include <iostream>
 #if __has_include( <X11/XKBlib.h>)
 #	include <X11/XKBlib.h>
 #endif
 
-FallbackX11::FallbackX11( std::chrono::milliseconds updateTime, QObject *parent ) : QObject( parent ), updateTime_( updateTime ) {
+FallbackX11::FallbackX11( std::chrono::milliseconds updateTime ) : updateTime_( updateTime ) {
 #if __has_include( <X11/XKBlib.h>)
 	thread_ = std::jthread( [this]( std::stop_token stoken ) { watcher( stoken ); } );
 #endif
@@ -77,7 +77,7 @@ void FallbackX11::updateLayouts() {
 	if ( !languages.empty() && languages_ != languages ) {
 		languages_ = languages;
 		auto layoutsList = languagesToLayouts( languages );
-		emit onLayoutListChanged( layoutsList );
+		onLayoutListChanged( layoutsList );
 	}
 #endif
 }
@@ -93,7 +93,7 @@ bool FallbackX11::updateLayoutId( unsigned long group ) {
 		auto shortName = languages_[i].name.substr( 0, 2 );
 		std::transform( shortName.begin(), shortName.end(), shortName.begin(), ::tolower );
 
-		emit onLayoutChanged( shortName );
+		onLayoutChanged( shortName );
 		return true;
 	}
 #endif
@@ -105,7 +105,7 @@ unsigned long FallbackX11::getActiveGroup() {
 #if __has_include( <X11/XKBlib.h>)
 	XkbStateRec state;
 	if ( XkbGetState( (Display *)display_, XkbUseCoreKbd, &state ) != Success ) {
-		qDebug() << "Can't get active layout group";
+		std::cerr << "Can't get active layout group" << std::endl;
 		return 0;
 	}
 	return ( (XkbDescPtr)keyboard_ )->names->groups[state.group];
@@ -136,17 +136,17 @@ void FallbackX11::openKeyboard( std::string &display ) {
 	int result;
 	display_ = XkbOpenDisplay( display.data(), NULL, NULL, NULL, NULL, &result );
 	if ( !display_ ) {
-		qDebug() << "Can't open display";
+		std::cerr << "Can't open display" << std::endl;
 		return;
 	}
 	freeKeyboard();
 	keyboard_ = XkbAllocKeyboard();
 	if ( !keyboard_ ) {
-		qDebug() << "Can't allocate keyboard";
+		std::cerr << "Can't allocate keyboard" << std::endl;
 		return;
 	}
 	if ( XkbGetNames( (Display *)display_, XkbGroupNamesMask, (XkbDescPtr)keyboard_ ) != Success ) {
-		qDebug() << "Can't get keyboard names";
+		std::cerr << "Can't get keyboard names" << std::endl;
 		freeKeyboard();
 	}
 #endif

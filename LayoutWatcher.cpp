@@ -1,6 +1,6 @@
 #include "LayoutWatcher.h"
 #include <sdbus-c++/sdbus-c++.h>
-#include <QDebug>
+#include <iostream>
 #include "FallbackX11.h"
 
 using namespace std::chrono_literals;
@@ -18,7 +18,7 @@ namespace consts {
 	constexpr auto kFallbackUpdateTime = 50ms;
 } // namespace consts
 
-LayoutWatcher::LayoutWatcher( QObject *parent ) : QObject( parent ) {
+LayoutWatcher::LayoutWatcher() {
 	try {
 		proxy_ = sdbus::createProxy( sdbus::createSessionBusConnection(), consts::kDBusService, consts::kDBusPath );
 		proxy_->uponSignal( consts::kDBusSigLayout ).onInterface( consts::kDBusInterface ).call( [this]( unsigned int layoutId ) {
@@ -36,7 +36,7 @@ LayoutWatcher::LayoutWatcher( QObject *parent ) : QObject( parent ) {
 }
 
 LayoutWatcher::~LayoutWatcher() {
-	delete fallbackX11_;
+	fallbackX11_.reset();
 	proxy_.reset();
 }
 
@@ -61,29 +61,29 @@ void LayoutWatcher::updateLayouts() {
 
 void LayoutWatcher::layoutChanged( unsigned int id ) {
 	layoutId_ = id;
-	emit onLayoutChanged( layoutsList_[id].shortName );
+	onLayoutChanged( layoutsList_[id].shortName );
 }
 
 void LayoutWatcher::layoutListChanged() {
 	updateLayouts();
-	emit onLayoutListChanged( layoutsList_ );
+	onLayoutListChanged( layoutsList_ );
 }
 
 void LayoutWatcher::createFallbackX11() {
 	if ( fallbackX11_ ) return;
-	qDebug() << "Fallback to X11";
-	fallbackX11_ = new FallbackX11( consts::kFallbackUpdateTime, this );
+	std::cerr << "Fallback to X11" << std::endl;
+	fallbackX11_.reset(new FallbackX11( consts::kFallbackUpdateTime ));
 
-	QObject::connect( fallbackX11_, &FallbackX11::onLayoutChanged, this, [this]( const std::string &layout ) {
+	fallbackX11_->onLayoutChanged.append( [this]( std::string_view layout ) {
 		for ( size_t i = 0; i < layoutsList_.size(); ++i ) {
 			if ( layoutsList_[i].shortName != layout ) continue;
 			layoutId_ = i;
 			break;
 		}
-		emit onLayoutChanged( layout );
+		onLayoutChanged( layout );
 	} );
-	QObject::connect( fallbackX11_, &FallbackX11::onLayoutListChanged, this, [this]( const std::vector<LayoutNames> &layouts ) {
+	fallbackX11_->onLayoutListChanged.append( [this]( const std::vector<LayoutNames> &layouts ) {
 		layoutsList_ = layouts;
-		emit onLayoutListChanged( layouts );
+		onLayoutListChanged( layouts );
 	} );
 }

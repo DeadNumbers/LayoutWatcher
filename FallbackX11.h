@@ -1,17 +1,19 @@
 #pragma once
 
 #include <chrono>
-
 #include <thread>
 #include "LayoutWatcher.h"
 
-class FallbackX11 : public QObject {
-	Q_OBJECT
+class FallbackX11 {
 public:
-	FallbackX11( std::chrono::milliseconds updateTime, QObject *parent = nullptr );
+	FallbackX11( std::chrono::milliseconds updateTime );
 	virtual ~FallbackX11();
 
 	std::vector<LayoutWatcher::LayoutNames> getLayoutsList() const;
+
+	// Signals
+	eventpp::CallbackList<void( std::string_view )> onLayoutChanged;
+	eventpp::CallbackList<void( const std::vector<LayoutWatcher::LayoutNames> & )> onLayoutListChanged;
 
 protected:
 	struct Language {
@@ -40,10 +42,5 @@ protected:
 
 	virtual void watcher( std::stop_token &stoken );
 
-protected slots:
 	void openKeyboard( std::string &display );
-
-signals:
-	void onLayoutListChanged( const std::vector<LayoutWatcher::LayoutNames> &layouts );
-	void onLayoutChanged( const std::string &shortName );
 };

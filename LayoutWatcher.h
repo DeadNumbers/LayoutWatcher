@@ -1,17 +1,16 @@
 #pragma once
 
 #include "LayoutWatcher_global.h"
-#include <QObject>
 #include <memory>
 #include <vector>
+#include "eventpp/include/eventpp/callbacklist.h"
 
 namespace sdbus {
 	class IProxy;
 }
+class FallbackX11;
 
-class LAYOUTWATCHER_EXPORT LayoutWatcher : public QObject {
-	Q_OBJECT
-
+class LAYOUTWATCHER_EXPORT LayoutWatcher{
 public:
 	struct LayoutNames {
 		std::string shortName;
@@ -19,7 +18,7 @@ public:
 		std::string longName;
 	};
 
-	[[maybe_unused]] LayoutWatcher( QObject *parent = nullptr );
+	[[maybe_unused]] LayoutWatcher();
 	virtual ~LayoutWatcher();
 
 	/**
@@ -33,6 +32,10 @@ public:
 	 */
 	virtual const std::vector<LayoutWatcher::LayoutNames> &getLayoutsList() const;
 
+	// Signals
+	eventpp::CallbackList<void( std::string_view )> onLayoutChanged;
+	eventpp::CallbackList<void( const std::vector<LayoutWatcher::LayoutNames> & )> onLayoutListChanged;
+
 protected:
 	std::unique_ptr<sdbus::IProxy> proxy_;
 	unsigned int layoutId_;
@@ -41,24 +44,12 @@ protected:
 	// Fetch language layouts from DBus or X11
 	void updateLayouts();
 
-protected slots: // DBus signals for KDE session
+	// DBus signals for KDE session
 	void layoutChanged( unsigned int id );
 	void layoutListChanged();
 
 private:
-	class FallbackX11 *fallbackX11_ = nullptr;
+	std::unique_ptr<FallbackX11> fallbackX11_;
 
 	void createFallbackX11();
-
-signals:
-	/**
-	 * @brief Emited on change active layout
-	 * @param shortName short name of new layout (e.g. en for English (US))
-	 */
-	void onLayoutChanged( const std::string &shortName );
-	/**
-	 * @brief Emited on change layout list
-	 * @param layouts list with layouts
-	 */
-	void onLayoutListChanged( const std::vector<LayoutWatcher::LayoutNames> &layouts );
 };
