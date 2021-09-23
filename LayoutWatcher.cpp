@@ -55,10 +55,12 @@ LayoutWatcher::LayoutWatcher( QObject *parent ) : QObject( parent ) {
 }
 
 LayoutWatcher::~LayoutWatcher() {
+#if __has_include(<X11/XKBlib.h>)
 	if ( fallbackX11_ ) {
 		delete fallbackX11_;
 		return;
 	}
+#endif
 
 	QDBusConnection bus = QDBusConnection::sessionBus();
 	if ( !bus.isConnected() ) return;
@@ -78,10 +80,12 @@ const QVector<LayoutWatcher::LayoutNames> &LayoutWatcher::getLayoutsList() const
 }
 
 void LayoutWatcher::updateLayouts() {
+#if __has_include(<X11/XKBlib.h>)
 	if ( fallbackX11_ ) {
 		layoutsList_ = fallbackX11_->getLayoutsList();
 		return;
 	}
+#endif
 	QDBusReply<QVector<LayoutWatcher::LayoutNames>> layouts = iface_->call( consts::kDBusMethodLayoutList );
 	if ( layouts.isValid() ) layoutsList_ = layouts.value();
 }
@@ -97,6 +101,7 @@ void LayoutWatcher::layoutListChanged() {
 }
 
 void LayoutWatcher::createFallbackX11() {
+#if __has_include(<X11/XKBlib.h>)
 	if ( fallbackX11_ ) return;
 	qDebug() << "Fallback to X11";
 	fallbackX11_ = new FallbackX11( consts::kFallbackUpdateTime, this );
@@ -113,6 +118,7 @@ void LayoutWatcher::createFallbackX11() {
 		layoutsList_ = layouts;
 		emit onLayoutListChanged( layouts );
 	} );
+#endif
 }
 
 QDBusArgument &operator<<( QDBusArgument &argument, const LayoutWatcher::LayoutNames &layoutNames ) {

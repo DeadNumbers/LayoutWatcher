@@ -1,3 +1,4 @@
+#if __has_include(<X11/XKBlib.h>)
 #include "FallbackX11.h"
 #include <QDebug>
 #include <X11/XKBlib.h>
@@ -132,3 +133,4 @@ void FallbackX11::openKeyboard( const QString &display ) {
 		freeKeyboard();
 	}
 }
+#endif

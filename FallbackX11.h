@@ -1,6 +1,8 @@
 #pragma once
 
 #include <chrono>
+
+#if __has_include(<X11/XKBlib.h>)
 #include <thread>
 #include "LayoutWatcher.h"
 
@@ -46,3 +48,4 @@ signals:
 	void onLayoutListChanged( const QVector<LayoutWatcher::LayoutNames> &layouts );
 	void onLayoutChanged( const QString &shortName );
 };
+#endif
