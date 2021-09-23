@@ -1,19 +1,24 @@
-#if __has_include(<X11/XKBlib.h>)
 #include "FallbackX11.h"
 #include <QDebug>
-#include <X11/XKBlib.h>
+#if __has_include( <X11/XKBlib.h>)
+#	include <X11/XKBlib.h>
+#endif
 
 FallbackX11::FallbackX11( std::chrono::milliseconds updateTime, QObject *parent ) : QObject( parent ), updateTime_( updateTime ) {
+#if __has_include( <X11/XKBlib.h>)
 	thread_ = std::jthread( [this]( std::stop_token stoken ) { watcher( stoken ); } );
+#endif
 }
 
 FallbackX11::~FallbackX11() {
+#if __has_include( <X11/XKBlib.h>)
 	thread_.request_stop();
 	thread_.join();
 	freeKeyboard();
+#endif
 }
 
-QVector<LayoutWatcher::LayoutNames> FallbackX11::getLayoutsList() const {
+std::vector<LayoutWatcher::LayoutNames> FallbackX11::getLayoutsList() const {
 	return languagesToLayouts( getLanguages() );
 }
 
@@ -26,8 +31,9 @@ void FallbackX11::updateDisplayAddr() {
 	}
 }
 
-QVector<FallbackX11::Language> FallbackX11::getLanguages() const {
-	QVector<Language> languages;
+std::vector<FallbackX11::Language> FallbackX11::getLanguages() const {
+	std::vector<Language> languages;
+#if __has_include( <X11/XKBlib.h>)
 	if ( !keyboard_ ) return languages;
 
 	Atom current_group;
@@ -42,26 +48,29 @@ QVector<FallbackX11::Language> FallbackX11::getLanguages() const {
 		lang.name = group_name;
 		lang.group = current_group;
 
-		languages << lang;
+		languages.push_back( lang );
 		XFree( group_name );
 	}
+#endif
 
 	return languages;
 }
 
-QVector<LayoutWatcher::LayoutNames> FallbackX11::languagesToLayouts( const QVector<Language> &languages ) const {
-	QVector<LayoutWatcher::LayoutNames> layoutsList;
+std::vector<LayoutWatcher::LayoutNames> FallbackX11::languagesToLayouts( const std::vector<Language> &languages ) const {
+	std::vector<LayoutWatcher::LayoutNames> layoutsList;
 	for ( auto &&lang : languages ) {
 		LayoutWatcher::LayoutNames layout;
 		layout.longName = lang.name;
-		layout.displayName = QString( layout.longName.data(), layout.longName.length() > 2 ? 2 : layout.longName.length() );
-		layout.shortName = layout.displayName.toLower();
-		layoutsList << layout;
+		layout.displayName = layout.longName.substr( 0, 2 );
+		layout.shortName = layout.displayName;
+		std::transform( layout.shortName.begin(), layout.shortName.end(), layout.shortName.begin(), ::tolower );
+		layoutsList.push_back( layout );
 	}
 	return layoutsList;
 }
 
 void FallbackX11::updateLayouts() {
+#if __has_include( <X11/XKBlib.h>)
 	if ( !keyboard_ ) return;
 
 	auto languages = getLanguages();
@@ -70,39 +79,46 @@ void FallbackX11::updateLayouts() {
 		auto layoutsList = languagesToLayouts( languages );
 		emit onLayoutListChanged( layoutsList );
 	}
+#endif
 }
 
-bool FallbackX11::updateLayoutId( ulong group ) {
+bool FallbackX11::updateLayoutId( unsigned long group ) {
 	if ( !group ) return false;
 	if ( group == activeGroup_ ) return true;
+#if __has_include( <X11/XKBlib.h>)
 	activeGroup_ = group;
-	for ( int i = 0; i < languages_.count(); ++i ) {
+	for ( size_t i = 0; i < languages_.size(); ++i ) {
 		if ( languages_[i].group != group ) continue;
 
-		auto &name = languages_[i].name;
-		auto shortName = QString( name.data(), name.length() > 2 ? 2 : name.length() ).toLower();
+		auto shortName = languages_[i].name.substr( 0, 2 );
+		std::transform( shortName.begin(), shortName.end(), shortName.begin(), ::tolower );
 
 		emit onLayoutChanged( shortName );
 		return true;
 	}
+#endif
 	return false;
 }
 
-ulong FallbackX11::getActiveGroup() {
+unsigned long FallbackX11::getActiveGroup() {
 	if ( !keyboard_ ) return 0;
+#if __has_include( <X11/XKBlib.h>)
 	XkbStateRec state;
 	if ( XkbGetState( (Display *)display_, XkbUseCoreKbd, &state ) != Success ) {
 		qDebug() << "Can't get active layout group";
 		return 0;
 	}
 	return ( (XkbDescPtr)keyboard_ )->names->groups[state.group];
+#endif
 }
 
 bool FallbackX11::freeKeyboard() {
+#if __has_include( <X11/XKBlib.h>)
 	if ( !keyboard_ ) return false;
 
 	XkbFreeKeyboard( (XkbDescPtr)keyboard_, 0, True );
 	keyboard_ = nullptr;
+#endif
 	return true;
 }
 
@@ -115,9 +131,10 @@ void FallbackX11::watcher( std::stop_token &stoken ) {
 	}
 }
 
-void FallbackX11::openKeyboard( const QString &display ) {
+void FallbackX11::openKeyboard( std::string &display ) {
+#if __has_include( <X11/XKBlib.h>)
 	int result;
-	display_ = XkbOpenDisplay( display.toLocal8Bit().data(), NULL, NULL, NULL, NULL, &result );
+	display_ = XkbOpenDisplay( display.data(), NULL, NULL, NULL, NULL, &result );
 	if ( !display_ ) {
 		qDebug() << "Can't open display";
 		return;
@@ -132,5 +149,5 @@ void FallbackX11::openKeyboard( const QString &display ) {
 		qDebug() << "Can't get keyboard names";
 		freeKeyboard();
 	}
-}
 #endif
+}

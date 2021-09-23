@@ -2,18 +2,21 @@
 
 #include "LayoutWatcher_global.h"
 #include <QObject>
+#include <memory>
+#include <vector>
 
-class QDBusInterface;
-class QDBusArgument;
+namespace sdbus {
+	class IProxy;
+}
 
 class LAYOUTWATCHER_EXPORT LayoutWatcher : public QObject {
 	Q_OBJECT
 
 public:
 	struct LayoutNames {
-		QString shortName;
-		QString displayName;
-		QString longName;
+		std::string shortName;
+		std::string displayName;
+		std::string longName;
 	};
 
 	[[maybe_unused]] LayoutWatcher( QObject *parent = nullptr );
@@ -23,23 +26,23 @@ public:
 	 * @brief Get current language layout
 	 * @return short name of active layout
 	 */
-	virtual const QString &getActiveLayout() const;
+	virtual const std::string &getActiveLayout() const;
 	/**
 	 * @brief Get list of language layouts
 	 * @return list of layouts
 	 */
-	virtual const QVector<LayoutWatcher::LayoutNames> &getLayoutsList() const;
+	virtual const std::vector<LayoutWatcher::LayoutNames> &getLayoutsList() const;
 
 protected:
-	QDBusInterface *iface_ = nullptr;
-	uint layoutId_;
-	QVector<LayoutNames> layoutsList_;
+	std::unique_ptr<sdbus::IProxy> proxy_;
+	unsigned int layoutId_;
+	std::vector<LayoutNames> layoutsList_;
 
 	// Fetch language layouts from DBus or X11
 	void updateLayouts();
 
 protected slots: // DBus signals for KDE session
-	void layoutChanged( uint id );
+	void layoutChanged( unsigned int id );
 	void layoutListChanged();
 
 private:
@@ -52,15 +55,10 @@ signals:
 	 * @brief Emited on change active layout
 	 * @param shortName short name of new layout (e.g. en for English (US))
 	 */
-	void onLayoutChanged( const QString &shortName );
+	void onLayoutChanged( const std::string &shortName );
 	/**
 	 * @brief Emited on change layout list
 	 * @param layouts list with layouts
 	 */
-	void onLayoutListChanged( const QVector<LayoutWatcher::LayoutNames> &layouts );
+	void onLayoutListChanged( const std::vector<LayoutWatcher::LayoutNames> &layouts );
 };
-
-QDBusArgument &operator<<( QDBusArgument &argument, const LayoutWatcher::LayoutNames &layoutNames );
-const QDBusArgument &operator>>( const QDBusArgument &argument, LayoutWatcher::LayoutNames &layoutNames );
-
-Q_DECLARE_METATYPE( LayoutWatcher::LayoutNames )

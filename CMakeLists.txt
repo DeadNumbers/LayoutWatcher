@@ -18,6 +18,7 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Core DBus REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core DBus REQUIRED)
+find_package(sdbus-c++ REQUIRED)
 find_package(X11)
 
 option(LAYOUTWATCHER_LINK_X11 "Link library with X11. It's need for correctly work fallback, when main application doesn't linked with X11" ${X11_FOUND})
@@ -31,13 +32,13 @@ file(GLOB ${PROJECT_NAME}_LIST_H
 	${CMAKE_CURRENT_SOURCE_DIR}/*.hpp
 )
 
-if (LAYOUTWATCHER_BUILD_STATIC)
+if (LAYOUTWATCHER_BUILD_SHARED)
 	add_library(LayoutWatcher SHARED ${${PROJECT_NAME}_LIST} ${${PROJECT_NAME}_LIST_H})
 else()
 	add_library(LayoutWatcher STATIC ${${PROJECT_NAME}_LIST} ${${PROJECT_NAME}_LIST_H})
 endif()
 
-target_link_libraries(LayoutWatcher PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::DBus)
+target_link_libraries(LayoutWatcher PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::DBus SDBusCpp::sdbus-c++)
 if (LAYOUTWATCHER_LINK_X11 AND X11_FOUND)
 	target_link_libraries(LayoutWatcher PRIVATE X11::Xkb)
 endif()

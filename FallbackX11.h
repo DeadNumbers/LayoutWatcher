@@ -2,7 +2,6 @@
 
 #include <chrono>
 
-#if __has_include(<X11/XKBlib.h>)
 #include <thread>
 #include "LayoutWatcher.h"
 
@@ -12,40 +11,39 @@ public:
 	FallbackX11( std::chrono::milliseconds updateTime, QObject *parent = nullptr );
 	virtual ~FallbackX11();
 
-	QVector<LayoutWatcher::LayoutNames> getLayoutsList() const;
+	std::vector<LayoutWatcher::LayoutNames> getLayoutsList() const;
 
 protected:
 	struct Language {
 		ulong group;
-		QString name;
+		std::string name;
 
 		bool operator==( const Language &rhs ) const { return group == rhs.group; }
 	};
 
 	std::chrono::milliseconds updateTime_;
-	QString displayAddr_;
-	ulong activeGroup_ = 0;
-	QVector<Language> languages_;
+	std::string displayAddr_;
+	unsigned long activeGroup_ = 0;
+	std::vector<Language> languages_;
 	void *display_;
 	void *keyboard_ = nullptr;
 	std::jthread thread_;
 
 	void updateDisplayAddr();
-	QVector<Language> getLanguages() const;
-	QVector<LayoutWatcher::LayoutNames> languagesToLayouts( const QVector<Language> &languages ) const;
+	std::vector<Language> getLanguages() const;
+	std::vector<LayoutWatcher::LayoutNames> languagesToLayouts( const std::vector<Language> &languages ) const;
 	void updateLayouts();
-	bool updateLayoutId( ulong group );
+	bool updateLayoutId( unsigned long group );
 
-	ulong getActiveGroup();
+	unsigned long getActiveGroup();
 	bool freeKeyboard();
 
 	virtual void watcher( std::stop_token &stoken );
 
 protected slots:
-	void openKeyboard( const QString &display );
+	void openKeyboard( std::string &display );
 
 signals:
-	void onLayoutListChanged( const QVector<LayoutWatcher::LayoutNames> &layouts );
-	void onLayoutChanged( const QString &shortName );
+	void onLayoutListChanged( const std::vector<LayoutWatcher::LayoutNames> &layouts );
+	void onLayoutChanged( const std::string &shortName );
 };
-#endif
