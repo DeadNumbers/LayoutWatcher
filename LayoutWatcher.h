@@ -41,6 +41,8 @@ protected:
 	unsigned int layoutId_;
 	std::vector<LayoutNames> layoutsList_;
 
+	void initialize( const char *service );
+
 	// Fetch language layouts from DBus or X11
 	void updateLayouts();
 

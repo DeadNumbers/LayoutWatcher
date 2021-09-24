@@ -10,6 +10,7 @@ Library for watching current keyboard language layout. She can notify about chan
 ## Supported platforms
 
 - KDE Session (X11/Wayland)
+- Non-KDE Wayland Sessions with KWin
 - Any other X11 Sessions
 
 ## Usage

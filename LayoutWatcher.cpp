@@ -5,7 +5,8 @@
 
 using namespace std::chrono_literals;
 namespace consts {
-	constexpr auto kDBusService = "org.kde.keyboard";
+	constexpr auto kDBusServiceKbd = "org.kde.keyboard";
+	constexpr auto kDBusServiceKWin = "org.kde.KWin";
 	constexpr auto kDBusPath = "/Layouts";
 	constexpr auto kDBusInterface = "org.kde.KeyboardLayouts";
 	// DBus signals
@@ -20,19 +21,16 @@ namespace consts {
 
 LayoutWatcher::LayoutWatcher() {
 	try {
-		proxy_ = sdbus::createProxy( sdbus::createSessionBusConnection(), consts::kDBusService, consts::kDBusPath );
-		proxy_->uponSignal( consts::kDBusSigLayout ).onInterface( consts::kDBusInterface ).call( [this]( unsigned int layoutId ) {
-			layoutChanged( layoutId );
-		} );
-		proxy_->uponSignal( consts::kDBusSigLayoutList ).onInterface( consts::kDBusInterface ).call( [this] { layoutListChanged(); } );
-		proxy_->finishRegistration();
-
-		updateLayouts();
-
-		unsigned int layoutId;
-		proxy_->callMethod( consts::kDBusMethodLayout ).onInterface( consts::kDBusInterface ).storeResultsTo( layoutId );
-		layoutChanged( layoutId );
-	} catch ( const sdbus::Error &e ) { createFallbackX11(); }
+		initialize( consts::kDBusServiceKbd );
+	} catch ( const sdbus::Error &e ) {
+		try {
+			std::cerr << "Try use " << consts::kDBusServiceKWin << " service" << std::endl;
+			initialize( consts::kDBusServiceKWin );
+		} catch ( const sdbus::Error &e ) {
+			std::cerr << "Fallback to X11" << std::endl;
+			createFallbackX11();
+		}
+	}
 }
 
 LayoutWatcher::~LayoutWatcher() {
@@ -46,6 +44,21 @@ const std::string &LayoutWatcher::getActiveLayout() const {
 
 const std::vector<LayoutWatcher::LayoutNames> &LayoutWatcher::getLayoutsList() const {
 	return layoutsList_;
+}
+
+void LayoutWatcher::initialize( const char *service ) {
+	proxy_ = sdbus::createProxy( sdbus::createSessionBusConnection(), service, consts::kDBusPath );
+	proxy_->uponSignal( consts::kDBusSigLayout ).onInterface( consts::kDBusInterface ).call( [this]( unsigned int layoutId ) {
+		layoutChanged( layoutId );
+	} );
+	proxy_->uponSignal( consts::kDBusSigLayoutList ).onInterface( consts::kDBusInterface ).call( [this] { layoutListChanged(); } );
+	proxy_->finishRegistration();
+
+	updateLayouts();
+
+	unsigned int layoutId;
+	proxy_->callMethod( consts::kDBusMethodLayout ).onInterface( consts::kDBusInterface ).storeResultsTo( layoutId );
+	layoutChanged( layoutId );
 }
 
 void LayoutWatcher::updateLayouts() {
@@ -74,7 +87,6 @@ void LayoutWatcher::layoutListChanged() {
 
 void LayoutWatcher::createFallbackX11() {
 	if ( fallbackX11_ ) return;
-	std::cerr << "Fallback to X11" << std::endl;
 	fallbackX11_.reset( new FallbackX11( consts::kFallbackUpdateTime ) );
 
 	fallbackX11_->onLayoutChanged.append( [this]( const std::string &layout ) {
