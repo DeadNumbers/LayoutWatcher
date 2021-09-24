@@ -28,6 +28,7 @@ void FallbackX11::updateDisplayAddr() {
 	if ( displayAddr_ != display_addr ) {
 		displayAddr_ = display_addr;
 		openKeyboard( displayAddr_ );
+		updateLayouts();
 	}
 }
 

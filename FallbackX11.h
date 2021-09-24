@@ -9,7 +9,7 @@ public:
 	FallbackX11( std::chrono::milliseconds updateTime );
 	virtual ~FallbackX11();
 
-	std::vector<LayoutWatcher::LayoutNames> getLayoutsList() const;
+	virtual std::vector<LayoutWatcher::LayoutNames> getLayoutsList() const;
 
 	// Signals
 	eventpp::CallbackList<void( std::string_view )> onLayoutChanged;
