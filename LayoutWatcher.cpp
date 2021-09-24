@@ -67,6 +67,9 @@ void LayoutWatcher::layoutChanged( unsigned int id ) {
 void LayoutWatcher::layoutListChanged() {
 	updateLayouts();
 	onLayoutListChanged( layoutsList_ );
+	unsigned int layoutId;
+	proxy_->callMethod( consts::kDBusMethodLayout ).onInterface( consts::kDBusInterface ).storeResultsTo( layoutId );
+	layoutChanged( layoutId );
 }
 
 void LayoutWatcher::createFallbackX11() {
