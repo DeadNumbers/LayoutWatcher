@@ -126,7 +126,10 @@ void FallbackX11::watcher( std::stop_token &stoken ) {
 	while ( !stoken.stop_requested() ) {
 		updateDisplayAddr();
 		auto group = getActiveGroup();
-		if ( !updateLayoutId( group ) ) updateLayouts();
+		if ( !updateLayoutId( group ) ) {
+			openKeyboard( displayAddr_ );
+			updateLayouts();
+		}
 		std::this_thread::sleep_for( updateTime_ );
 	}
 }
