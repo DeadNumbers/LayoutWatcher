@@ -72,7 +72,7 @@ void LayoutWatcher::layoutListChanged() {
 void LayoutWatcher::createFallbackX11() {
 	if ( fallbackX11_ ) return;
 	std::cerr << "Fallback to X11" << std::endl;
-	fallbackX11_.reset(new FallbackX11( consts::kFallbackUpdateTime ));
+	fallbackX11_.reset( new FallbackX11( consts::kFallbackUpdateTime ) );
 
 	fallbackX11_->onLayoutChanged.append( [this]( std::string_view layout ) {
 		for ( size_t i = 0; i < layoutsList_.size(); ++i ) {

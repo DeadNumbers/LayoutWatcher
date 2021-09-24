@@ -10,7 +10,7 @@ namespace sdbus {
 }
 class FallbackX11;
 
-class LAYOUTWATCHER_EXPORT LayoutWatcher{
+class LAYOUTWATCHER_EXPORT LayoutWatcher {
 public:
 	struct LayoutNames {
 		std::string shortName;
