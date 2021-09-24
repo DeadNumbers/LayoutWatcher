@@ -43,3 +43,4 @@ target_compile_definitions(LayoutWatcher PRIVATE LAYOUTWATCHER_LIBRARY)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.h" DESTINATION include/LayoutWatcher)
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}_global.h" DESTINATION include/LayoutWatcher)
