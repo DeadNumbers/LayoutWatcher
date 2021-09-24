@@ -21,10 +21,11 @@ option(LAYOUTWATCHER_BUILD_SHARED "Build shared library instead of static" ${IS_
 
 file(GLOB ${PROJECT_NAME}_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/fallbacks/*.cpp
 )
 file(GLOB ${PROJECT_NAME}_LIST_H
 	${CMAKE_CURRENT_SOURCE_DIR}/*.h
-	${CMAKE_CURRENT_SOURCE_DIR}/*.hpp
+	${CMAKE_CURRENT_SOURCE_DIR}/fallbacks/*.h
 )
 
 if (LAYOUTWATCHER_BUILD_SHARED)

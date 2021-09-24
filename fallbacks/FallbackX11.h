@@ -2,7 +2,7 @@
 
 #include <chrono>
 #include <thread>
-#include "LayoutWatcher.h"
+#include "../LayoutWatcher.h"
 
 class FallbackX11 {
 public:
