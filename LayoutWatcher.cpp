@@ -74,7 +74,7 @@ void LayoutWatcher::createFallbackX11() {
 	std::cerr << "Fallback to X11" << std::endl;
 	fallbackX11_.reset( new FallbackX11( consts::kFallbackUpdateTime ) );
 
-	fallbackX11_->onLayoutChanged.append( [this]( std::string_view layout ) {
+	fallbackX11_->onLayoutChanged.append( [this]( const std::string &layout ) {
 		for ( size_t i = 0; i < layoutsList_.size(); ++i ) {
 			if ( layoutsList_[i].shortName != layout ) continue;
 			layoutId_ = i;

@@ -33,7 +33,7 @@ public:
 	virtual const std::vector<LayoutWatcher::LayoutNames> &getLayoutsList() const;
 
 	// Signals
-	eventpp::CallbackList<void( std::string_view )> onLayoutChanged;
+	eventpp::CallbackList<void( const std::string & )> onLayoutChanged;
 	eventpp::CallbackList<void( const std::vector<LayoutWatcher::LayoutNames> & )> onLayoutListChanged;
 
 protected:
