@@ -40,3 +40,6 @@ if (LAYOUTWATCHER_LINK_X11 AND X11_FOUND)
 endif()
 
 target_compile_definitions(LayoutWatcher PRIVATE LAYOUTWATCHER_LIBRARY)
+
+install(TARGETS ${PROJECT_NAME} DESTINATION lib)
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.h" DESTINATION include/LayoutWatcher)
