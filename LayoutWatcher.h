@@ -16,6 +16,10 @@ public:
 		std::string shortName;
 		std::string displayName;
 		std::string longName;
+
+		bool operator==( const LayoutNames &rhs ) const {
+			return shortName == rhs.shortName && displayName == rhs.displayName && longName == rhs.longName;
+		}
 	};
 
 	[[maybe_unused]] LayoutWatcher();
