@@ -19,6 +19,7 @@ find_package(X11)
 
 option(LAYOUTWATCHER_LINK_X11 "Link library with X11. It's need for correctly work fallback, when main application doesn't linked with X11" ${X11_FOUND})
 option(LAYOUTWATCHER_BUILD_SHARED "Build shared library instead of static" ${IS_TOPLEVEL_PROJECT})
+option(LAYOUTWATCHER_BUNDLED_SDBUSCPP "Use bundled sdbus-c++" OFF)
 
 file(GLOB ${PROJECT_NAME}_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
@@ -35,7 +36,21 @@ else()
 	add_library(LayoutWatcher STATIC ${${PROJECT_NAME}_LIST} ${${PROJECT_NAME}_LIST_H})
 endif()
 
-target_link_libraries(LayoutWatcher PRIVATE SDBusCpp::sdbus-c++)
+if (NOT sdbus-c++_FOUND OR LAYOUTWATCHER_BUNDLED_SDBUSCPP)
+	if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/sdbus-cpp)
+		execute_process(COMMAND git clone --recursive https://github.com/Kistler-Group/sdbus-cpp.git WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+	endif()
+	if (NOT BUILD_SHARED_LIBS)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpic")
+	endif()
+	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/sdbus-cpp)
+	target_include_directories(LayoutWatcher PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/sdbus-cpp/include/sdbus-c++)
+	target_link_directories(LayoutWatcher PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/sdbus-cpp)
+	target_link_libraries(LayoutWatcher PRIVATE sdbus-c++)
+else()
+	target_link_libraries(LayoutWatcher PRIVATE SDBusCpp::sdbus-c++)
+endif()
+
 if (LAYOUTWATCHER_LINK_X11 AND X11_FOUND)
 	target_link_libraries(LayoutWatcher PRIVATE X11::Xkb)
 endif()
