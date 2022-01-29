@@ -18,7 +18,6 @@ find_package(sdbus-c++ REQUIRED)
 find_package(X11)
 
 option(LAYOUTWATCHER_LINK_X11 "Link library with X11. It's need for correctly work fallback, when main application doesn't linked with X11" ${X11_FOUND})
-option(LAYOUTWATCHER_BUILD_SHARED "Build shared library instead of static" ${IS_TOPLEVEL_PROJECT})
 option(LAYOUTWATCHER_BUNDLED_SDBUSCPP "Use bundled sdbus-c++" OFF)
 
 file(GLOB ${PROJECT_NAME}_LIST
@@ -30,11 +29,7 @@ file(GLOB ${PROJECT_NAME}_LIST_H
 	${CMAKE_CURRENT_SOURCE_DIR}/fallbacks/*.h
 )
 
-if (LAYOUTWATCHER_BUILD_SHARED)
-	add_library(LayoutWatcher SHARED ${${PROJECT_NAME}_LIST} ${${PROJECT_NAME}_LIST_H})
-else()
-	add_library(LayoutWatcher STATIC ${${PROJECT_NAME}_LIST} ${${PROJECT_NAME}_LIST_H})
-endif()
+add_library(LayoutWatcher ${${PROJECT_NAME}_LIST} ${${PROJECT_NAME}_LIST_H})
 
 if (NOT sdbus-c++_FOUND OR LAYOUTWATCHER_BUNDLED_SDBUSCPP)
 	if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/sdbus-cpp)
