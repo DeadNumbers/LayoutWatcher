@@ -14,7 +14,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
-find_package(sdbus-c++ REQUIRED)
+find_package(sdbus-c++)
 find_package(X11)
 
 option(LAYOUTWATCHER_LINK_X11 "Link library with X11. It's need for correctly work fallback, when main application doesn't linked with X11" ${X11_FOUND})
